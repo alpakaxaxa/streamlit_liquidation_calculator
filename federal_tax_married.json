@@ -1,0 +1,18 @@
+[
+    { "income": 0, "tax": 0.0, "progression": 0.00 },
+    { "income": 28300, "tax": 0.0, "progression": 1.00 },
+    { "income": 50900, "tax": 226.00, "progression": 2.00 },
+    { "income": 58400, "tax": 376, "progression": 3.00 },
+    { "income": 75300, "tax": 883, "progression": 4.00 },
+    { "income": 90300, "tax": 1483, "progression": 5.00 },
+    { "income": 103400, "tax": 2138, "progression": 6.00 },
+    { "income": 114700, "tax": 2816, "progression": 7.00 },
+    { "income": 124200, "tax": 3481, "progression": 8.00 },
+    { "income": 131700, "tax": 4081, "progression": 9.00 },
+    { "income": 137300, "tax": 4585, "progression": 10.00},
+    { "income": 141200, "tax": 4975, "progression": 11.00},
+    { "income": 143100, "tax": 5184, "progression": 12.00},
+    { "income": 145000, "tax": 5412, "progression": 13.00},
+    { "income": 895800, "tax": 103016, "progression": 11.5},
+    { "income": 895900, "tax": 103028.5, "progression": 11.5}
+]
