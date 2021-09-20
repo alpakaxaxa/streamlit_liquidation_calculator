@@ -96,7 +96,7 @@ if submit_button:
     federal_tax = federal_tax_notional_purchase + federal_tax_other_liquidation_profit
 
     col1, col2 = st.columns(2)
-    col1.metric(label='Kantons- und Gemeindesteuern', value="CHF {:/'.2f}".format(local_tax))
-    col2.metric(label='Bundessteuern', value="CHF {:/'.2f}".format(federal_tax))
+    col1.metric(label='Kantons- und Gemeindesteuern', value="CHF {:,.2f}".format(local_tax))
+    col2.metric(label='Bundessteuern', value="CHF {:,.2f}".format(federal_tax))
 
 
