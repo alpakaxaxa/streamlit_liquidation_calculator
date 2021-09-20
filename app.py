@@ -1,7 +1,6 @@
 import streamlit as st
 import json
 import datetime
-import locale
 
 st.title('Inoffizieller Liquidationsrechner Kanton St. Gallen')
 
@@ -96,9 +95,8 @@ if submit_button:
     
     federal_tax = federal_tax_notional_purchase + federal_tax_other_liquidation_profit
 
-    locale.setlocale(locale.LC_ALL, 'de_CH')
     col1, col2 = st.columns(2)
-    col1.metric(label='Kantons- und Gemeindesteuern', value=locale.currency(local_tax, grouping=True))
-    col2.metric(label='Bundessteuern', value=locale.currency(federal_tax, grouping=True))
+    col1.metric(label='Kantons- und Gemeindesteuern', value="CHF {:/'.2f}".format(local_tax))
+    col2.metric(label='Bundessteuern', value="CHF {:/'.2f}".format(federal_tax))
 
 
