@@ -105,32 +105,3 @@ if submit_button:
     col1.metric(label='Kantons- und Gemeindesteuern', value="CHF {:,.2f}".format(local_tax))
     col2.metric(label='Bundessteuern', value="CHF {:,.2f}".format(federal_tax))
 
-footer="""<style>
-a:link , a:visited{
-color: blue;
-background-color: transparent;
-text-decoration: underline;
-}
-
-a:hover,  a:active {
-color: red;
-background-color: transparent;
-text-decoration: underline;
-}
-
-.footer {
-position: fixed;
-left: 0;
-bottom: 0;
-width: 100%;
-background-color: white;
-color: black;
-text-align: center;
-}
-</style>
-<div class="footer">
-<p>Developed with ❤ by <a style='display: block; text-align: center;' href="https://github.com/alpakaxaxa" target="_blank">Stephan Müller</a></p>
-</div>
-"""
-st.markdown(footer,unsafe_allow_html=True)
-
