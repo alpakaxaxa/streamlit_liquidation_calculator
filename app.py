@@ -2,6 +2,8 @@ import streamlit as st
 import json
 import datetime
 
+st.set_page_config(page_title='Liquidationsrechner', page_icon=":ledger:",)
+
 st.title('Inoffizieller Liquidationsrechner Kanton St. Gallen')
 
 f_municipalities = open('municipalities.json')
@@ -82,21 +84,53 @@ if submit_button:
     simple_tax = calculate_simple_tax(married, notional_purchase, other_liquidation_profit)
     municipality_data = find_municipality_data(year_input, municipality)
     simple_tax_multiplier = extract_simple_tax_multiplier(municipality_data, denomination, denomination_partner)
-    local_tax = simple_tax * simple_tax_multiplier
     if married == False:
         federal_tax_notional_purchase = calculate_federal_tax('federal_tax.json', notional_purchase)/5
         federal_tax_other_liquidation_profit = calculate_federal_tax('federal_tax.json', other_liquidation_profit/5)
+        local_tax_notional_purchase = notional_purchase * 0.022
     else:
         federal_tax_notional_purchase = calculate_federal_tax('federal_tax_married.json', notional_purchase)/5
         federal_tax_other_liquidation_profit = calculate_federal_tax('federal_tax_married.json', other_liquidation_profit/5)
+        local_tax_notional_purchase = notional_purchase * 0.02
 
     if federal_tax_other_liquidation_profit / other_liquidation_profit < 0.02:
         federal_tax_other_liquidation_profit = other_liquidation_profit * 0.02
     
+    local_tax_other_liquidation_profit = other_liquidation_profit * 0.04
+    simple_tax = local_tax_notional_purchase + local_tax_other_liquidation_profit
+    local_tax = simple_tax * simple_tax_multiplier
     federal_tax = federal_tax_notional_purchase + federal_tax_other_liquidation_profit
 
     col1, col2 = st.columns(2)
     col1.metric(label='Kantons- und Gemeindesteuern', value="CHF {:,.2f}".format(local_tax))
     col2.metric(label='Bundessteuern', value="CHF {:,.2f}".format(federal_tax))
 
+footer="""<style>
+a:link , a:visited{
+color: blue;
+background-color: transparent;
+text-decoration: underline;
+}
+
+a:hover,  a:active {
+color: red;
+background-color: transparent;
+text-decoration: underline;
+}
+
+.footer {
+position: fixed;
+left: 0;
+bottom: 0;
+width: 100%;
+background-color: white;
+color: black;
+text-align: center;
+}
+</style>
+<div class="footer">
+<p>Developed with ❤ by <a style='display: block; text-align: center;' href="https://github.com/alpakaxaxa" target="_blank">Stephan Müller</a></p>
+</div>
+"""
+st.markdown(footer,unsafe_allow_html=True)
 
