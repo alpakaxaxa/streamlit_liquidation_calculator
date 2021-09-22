@@ -70,36 +70,50 @@ def transform_input_denomination_to_target_data_denomination(input_denomination)
     else:
         return ''
 
+def validate_input():
+    if st.session_state.married == False and st.session_state.denomination_partner != 'Konfessionslos':
+        st.session_state.denomination_partner = 'Konfessionslos'
+        st.info('Die Konfession Ehepartner wurde auf konfessionslos gestellt, da verheiratet nicht ausgewählt wurde')
+
 with st.form(key='liquidation_information'):
     year_input = st.number_input('Steuerjahr', min_value=2020, max_value=2020, value=CURRENT_YEAR-1, step=1)
     municipality = st.selectbox('Gemeinde', municipalities)
-    married = st.checkbox('Verheiratet')
+    married = st.checkbox('Verheiratet', key='married')
     denomination = st.selectbox('Konfession', ('Konfessionslos', 'Römisch-Katholisch', 'Evangelisch'), key='denomination')
     denomination_partner = st.selectbox('Konfession Ehepartner', ('Konfessionslos', 'Römisch-Katholisch', 'Evangelisch'), key='denomination_partner')
-    notional_purchase = st.number_input('Fiktiver Einkauf', step=1)
-    other_liquidation_profit = st.number_input('Übriger Liquidationsgewinn', step=1)
-    submit_button = st.form_submit_button(label='Berechnen')
+    notional_purchase = st.number_input('Fiktiver Einkauf', step=1, key='notional_purchase')
+    other_liquidation_profit = st.number_input('Übriger Liquidationsgewinn', step=1, key='other_liquidation_profit')
+    submit_button = st.form_submit_button(label='Berechnen', on_click=validate_input)
 
 if submit_button:
     simple_tax = calculate_simple_tax(married, notional_purchase, other_liquidation_profit)
     municipality_data = find_municipality_data(year_input, municipality)
     simple_tax_multiplier = extract_simple_tax_multiplier(municipality_data, denomination, denomination_partner)
+    local_tax = simple_tax * simple_tax_multiplier
+
     if married == False:
         federal_tax_notional_purchase = calculate_federal_tax('federal_tax.json', notional_purchase)/5
         federal_tax_other_liquidation_profit = calculate_federal_tax('federal_tax.json', other_liquidation_profit/5)
-        local_tax_notional_purchase = notional_purchase * 0.022
     else:
         federal_tax_notional_purchase = calculate_federal_tax('federal_tax_married.json', notional_purchase)/5
         federal_tax_other_liquidation_profit = calculate_federal_tax('federal_tax_married.json', other_liquidation_profit/5)
-        local_tax_notional_purchase = notional_purchase * 0.02
 
-    if federal_tax_other_liquidation_profit / other_liquidation_profit < 0.02:
+    # Ensure that user input of 0 does not produce divison by 0
+    other_liquidation_profit_divider = 0
+    if other_liquidation_profit == 0:
+        other_liquidation_profit_divider = 1
+    else:
+        other_liquidation_profit_divider = other_liquidation_profit
+
+    if federal_tax_other_liquidation_profit / other_liquidation_profit_divider < 0.02:
         federal_tax_other_liquidation_profit = other_liquidation_profit * 0.02
     
-    local_tax_other_liquidation_profit = other_liquidation_profit * 0.04
-    simple_tax = local_tax_notional_purchase + local_tax_other_liquidation_profit
-    local_tax = simple_tax * simple_tax_multiplier
     federal_tax = federal_tax_notional_purchase + federal_tax_other_liquidation_profit
+
+    print('Simple Tax', simple_tax)
+    print('Local Tax: ', local_tax)
+    print('Federal Tax: ', federal_tax)
+    print('Multiplier: ', simple_tax_multiplier)
 
     col1, col2 = st.columns(2)
     col1.metric(label='Kantons- und Gemeindesteuern', value="CHF {:,.2f}".format(local_tax))
