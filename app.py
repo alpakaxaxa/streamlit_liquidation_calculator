@@ -32,19 +32,23 @@ def find_municipality_data(tax_year, municipality):
         if tax_rate['Commune'] == municipality:
             return tax_rate
 
-def extract_simple_tax_multiplier(municipality_data, denomination, denomination_partner):
+def extract_simple_tax_multiplier(municipality_data, married, denomination, denomination_partner):
     simple_tax_multiplier = municipality_data['Canton_1']
     simple_tax_multiplier += municipality_data['Commune_1']
+    print('Simple Tax Multiplicator canton and municipality factor: ', simple_tax_multiplier)
     target_data_denomination = transform_input_denomination_to_target_data_denomination(denomination)
-    if target_data_denomination != '':
-        simple_tax_multiplier += municipality_data[target_data_denomination]
     target_data_denomination_partner = transform_input_denomination_to_target_data_denomination(denomination_partner)
-    if target_data_denomination_partner != '':
-        simple_tax_multiplier += municipality_data[target_data_denomination_partner]
-
+    if target_data_denomination != '' and target_data_denomination_partner != '':
+        if not married:
+            simple_tax_multiplier += municipality_data[target_data_denomination]
+        else:
+            print('Before: ', simple_tax_multiplier)
+            simple_tax_multiplier += (municipality_data[target_data_denomination] + municipality_data[target_data_denomination_partner])/2
+            print('After: ', simple_tax_multiplier)
+            
     return simple_tax_multiplier/100
 
-def calculate_federal_tax(file_name, tax_amount, federal_tax_multiplier=1):
+def calculate_federal_tax(file_name, tax_amount):
     f_federal_tax = open(file_name)
     federal_tax_rates = json.load(f_federal_tax)
     f_federal_tax.close()
@@ -88,7 +92,7 @@ with st.form(key='liquidation_information'):
 if submit_button:
     simple_tax = calculate_simple_tax(married, notional_purchase, other_liquidation_profit)
     municipality_data = find_municipality_data(year_input, municipality)
-    simple_tax_multiplier = extract_simple_tax_multiplier(municipality_data, denomination, denomination_partner)
+    simple_tax_multiplier = extract_simple_tax_multiplier(municipality_data, married, denomination, denomination_partner)
     local_tax = simple_tax * simple_tax_multiplier
 
     if married == False:
