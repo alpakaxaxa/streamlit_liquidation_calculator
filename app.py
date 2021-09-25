@@ -35,36 +35,33 @@ def find_municipality_data(tax_year, municipality):
 def extract_simple_tax_multiplier(municipality_data, married, denomination, denomination_partner):
     simple_tax_multiplier = municipality_data['Canton_1']
     simple_tax_multiplier += municipality_data['Commune_1']
-    print('Simple Tax Multiplicator canton and municipality factor: ', simple_tax_multiplier)
     target_data_denomination = transform_input_denomination_to_target_data_denomination(denomination)
     target_data_denomination_partner = transform_input_denomination_to_target_data_denomination(denomination_partner)
-    if target_data_denomination != '' and target_data_denomination_partner != '':
-        if not married:
-            simple_tax_multiplier += municipality_data[target_data_denomination]
-        else:
-            print('Before: ', simple_tax_multiplier)
-            simple_tax_multiplier += (municipality_data[target_data_denomination] + municipality_data[target_data_denomination_partner])/2
-            print('After: ', simple_tax_multiplier)
+    # Denomination tax rate of married couple has to be added and then substracted by 2
+    if not married:
+        simple_tax_multiplier += municipality_data.get(target_data_denomination,0)
+    else:
+        simple_tax_multiplier += (municipality_data.get(target_data_denomination,0) + municipality_data.get(target_data_denomination_partner,0))/2
             
     return simple_tax_multiplier/100
 
-def calculate_federal_tax(file_name, tax_amount):
-    f_federal_tax = open(file_name)
+def calculate_federal_tax_new(tax_amount, married):
+    if married:
+        f_federal_tax = open('federal_tax_married.json')
+    else:
+        f_federal_tax = open('federal_tax.json')
     federal_tax_rates = json.load(f_federal_tax)
     f_federal_tax.close()
 
-    target_federal_tax_rate = None
-    for i, tax_rate in enumerate(federal_tax_rates):
-        if tax_amount < tax_rate["income"]:
+    target_federal_tax_rate = federal_tax_rates[0]
+    for i in range(len(federal_tax_rates)):
+        if i == (len(federal_tax_rates)-1):
             target_federal_tax_rate = federal_tax_rates[i-1]
+        if tax_amount < federal_tax_rates[i]["income"]:
+            if i != 0:
+                target_federal_tax_rate = federal_tax_rates[i-1]
             break
-        else:
-            continue
-    
-    if target_federal_tax_rate != None:
-        federal_tax = target_federal_tax_rate["tax"] + (int((tax_amount - target_federal_tax_rate["income"])/100) * target_federal_tax_rate["progression"])
-        return federal_tax
-    return 0            
+    return target_federal_tax_rate["tax"] + (int((tax_amount - target_federal_tax_rate["income"])/100) * target_federal_tax_rate["progression"])
 
 def transform_input_denomination_to_target_data_denomination(input_denomination):
     if input_denomination == 'Evangelisch':
@@ -95,29 +92,21 @@ if submit_button:
     simple_tax_multiplier = extract_simple_tax_multiplier(municipality_data, married, denomination, denomination_partner)
     local_tax = simple_tax * simple_tax_multiplier
 
-    if married == False:
-        federal_tax_notional_purchase = calculate_federal_tax('federal_tax.json', notional_purchase)/5
-        federal_tax_other_liquidation_profit = calculate_federal_tax('federal_tax.json', other_liquidation_profit/5)
-    else:
-        federal_tax_notional_purchase = calculate_federal_tax('federal_tax_married.json', notional_purchase)/5
-        federal_tax_other_liquidation_profit = calculate_federal_tax('federal_tax_married.json', other_liquidation_profit/5)
-
-    # Ensure that user input of 0 does not produce divison by 0
-    other_liquidation_profit_divider = 0
+    federal_tax_other_liquidation_profit = calculate_federal_tax_new(other_liquidation_profit/5, married)
+    # Ensure 0 input does not result in division by 0
     if other_liquidation_profit == 0:
         other_liquidation_profit_divider = 1
     else:
         other_liquidation_profit_divider = other_liquidation_profit
+    federal_tax_other_liquidation_profit_rate = federal_tax_other_liquidation_profit / (other_liquidation_profit_divider/5)
 
-    if federal_tax_other_liquidation_profit / other_liquidation_profit_divider < 0.02:
-        federal_tax_other_liquidation_profit = other_liquidation_profit * 0.02
+    if federal_tax_other_liquidation_profit_rate < 0.02:
+        federal_tax_other_liquidation_profit_rate = 0.02
+
+    federal_tax_other_liquidation_profit = other_liquidation_profit * federal_tax_other_liquidation_profit_rate
     
+    federal_tax_notional_purchase = calculate_federal_tax_new(notional_purchase, married)/5
     federal_tax = federal_tax_notional_purchase + federal_tax_other_liquidation_profit
-
-    print('Simple Tax', simple_tax)
-    print('Local Tax: ', local_tax)
-    print('Federal Tax: ', federal_tax)
-    print('Multiplier: ', simple_tax_multiplier)
 
     col1, col2 = st.columns(2)
     col1.metric(label='Kantons- und Gemeindesteuern', value="CHF {:,.2f}".format(local_tax))
