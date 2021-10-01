@@ -99,20 +99,13 @@ if submit_button:
     
     federal_tax_other_liquidation_profit_rate = federal_tax_other_liquidation_profit / (other_liquidation_profit_divider/5)
 
-    print('federal tax other liquidation profit rate: ', federal_tax_other_liquidation_profit_rate)
-
     if federal_tax_other_liquidation_profit_rate < 0.02:
         federal_tax_other_liquidation_profit_rate = 0.02
 
     federal_tax_other_liquidation_profit = other_liquidation_profit * federal_tax_other_liquidation_profit_rate
-    print('Federal tax other liquidation profit: ', federal_tax_other_liquidation_profit)
     federal_tax_notional_purchase = calculate_federal_tax(notional_purchase, married)/5
-    print('Federal tax notional purchase: ', federal_tax_notional_purchase)
     federal_tax = federal_tax_notional_purchase + federal_tax_other_liquidation_profit
 
     col1, col2 = st.columns(2)
     col1.metric(label='Kantons- und Gemeindesteuern', value="CHF {:,.2f}".format(local_tax))
     col2.metric(label='Bundessteuern', value="CHF {:,.2f}".format(federal_tax))
-
-    print(data)
-
