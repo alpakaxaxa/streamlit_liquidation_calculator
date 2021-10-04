@@ -12,14 +12,6 @@ hide_streamlit_style='''
 '''
 st.markdown(hide_streamlit_style,unsafe_allow_html=True)
 
-padding = 1
-st.markdown(f""" <style>
-    .reportview-container .main .block-container{{
-        padding-top: {padding}rem;
-        padding-right: {padding}rem;
-        padding-left: {padding}rem;
-        padding-bottom: {padding}rem;
-    }} </style> """, unsafe_allow_html=True)
 st.title('Inoffizieller Liquidationsrechner Kanton St. Gallen')
 
 f_municipalities = open('municipalities.json')
