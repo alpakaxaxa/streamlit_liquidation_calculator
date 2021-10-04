@@ -4,7 +4,22 @@ import datetime
 from supabase_py import create_client, Client
 
 st.set_page_config(page_title='Liquidationsrechner', page_icon=":ledger:",)
+hide_streamlit_style='''
+<style>
+    #MainMenu{visibility:hidden;}
+    footer{visibility:hidden;}
+</style>
+'''
+st.markdown(hide_streamlit_style,unsafe_allow_html=True)
 
+padding = 1
+st.markdown(f""" <style>
+    .reportview-container .main .block-container{{
+        padding-top: {padding}rem;
+        padding-right: {padding}rem;
+        padding-left: {padding}rem;
+        padding-bottom: {padding}rem;
+    }} </style> """, unsafe_allow_html=True)
 st.title('Inoffizieller Liquidationsrechner Kanton St. Gallen')
 
 f_municipalities = open('municipalities.json')
