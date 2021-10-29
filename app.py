@@ -21,10 +21,9 @@ CURRENT_YEAR = datetime.datetime.now().year
 NOTIONAL_PURCHASE_RATE = 0.022
 NOTIONAL_PURCHASE_RATE_MARRIED = 0.02
 OTHER_LIQUIDATION_RATE = 0.04
-APIKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTYzMjYwNDgyMSwiZXhwIjoxOTQ4MTgwODIxfQ.lGyzXxNAeor9HBd2wcaJ4he1SxMBXEM13PbLmYsxjcM'
 URL = 'https://hbhuxcikiovvpeiwgnqf.supabase.co'
 
-supabase: Client = create_client(URL, APIKEY)
+supabase: Client = create_client(URL, st.secrets["APIKEY"])
 
 def calculate_simple_tax(married, notional_purchase, other_liquidation_profit):
     notional_purchase_tax = 0
@@ -54,8 +53,9 @@ def extract_simple_tax_multiplier(municipality_data, married, denomination, deno
             
     return simple_tax_multiplier/100
 
+@st.cache
 def calculate_federal_tax(tax_amount, married):
-    federal_data = supabase.table("Federal Tax Rate").select("*").eq('Married', str(married)).execute()
+    federal_data = get_federal_tax_data()
     federal_tax_rates = federal_data['data']
     target_federal_tax_rate = federal_tax_rates[0]
     for i in range(len(federal_tax_rates)):
@@ -80,6 +80,15 @@ def validate_input():
         st.session_state.denomination_partner = 'Konfessionslos'
         st.info('Die Konfession Ehepartner wurde auf konfessionslos gestellt, da verheiratet nicht ausgewählt wurde')
 
+@st.cache
+def get_tax_data():
+    return supabase.table("Swiss Tax Rate").select("*").eq('Canton', 'SG').eq('Tax Year', str(year_input)).execute()
+
+
+@st.cache
+def get_federal_tax_data():
+    return supabase.table("Federal Tax Rate").select("*").eq('Married', str(married)).execute()
+
 with st.form(key='liquidation_information'):
     year_input = st.number_input('Steuerjahr', min_value=2019, max_value=2021, value=CURRENT_YEAR-1, step=1)
     municipality = st.selectbox('Gemeinde', municipalities)
@@ -91,7 +100,7 @@ with st.form(key='liquidation_information'):
     submit_button = st.form_submit_button(label='Berechnen', on_click=validate_input)
 
 if submit_button:
-    data = supabase.table("Swiss Tax Rate").select("*").eq('Canton', 'SG').eq('Tax Year', str(year_input)).execute()
+    data = get_tax_data()
     simple_tax = calculate_simple_tax(married, notional_purchase, other_liquidation_profit)
     municipality_data = find_municipality_data(data, municipality)
     simple_tax_multiplier = extract_simple_tax_multiplier(municipality_data, married, denomination, denomination_partner)
