@@ -39,13 +39,13 @@ def calculate_simple_tax(married, notional_purchase, other_liquidation_profit):
 
 def find_municipality_data(data, municipality):
     for tax_rate in data['data']:
-        if tax_rate['Commune Name'] == municipality:
+        if tax_rate['Commune_Name'] == municipality:
             return tax_rate
 
 
 def extract_simple_tax_multiplier(municipality_data, married, denomination, denomination_partner):
-    simple_tax_multiplier = municipality_data['Canton Rate']
-    simple_tax_multiplier += municipality_data['Commune Rate']
+    simple_tax_multiplier = municipality_data['Canton_Rate']
+    simple_tax_multiplier += municipality_data['Commune_Rate']
     target_data_denomination = transform_input_denomination_to_target_data_denomination(
         denomination)
     target_data_denomination_partner = transform_input_denomination_to_target_data_denomination(
@@ -93,7 +93,7 @@ def validate_input():
 
 @st.cache
 def get_tax_data():
-    return supabase.table("Swiss Tax Rate").select("*").eq('Canton', 'SG').eq('Tax Year', str(year_input)).execute()
+    return supabase.table("Swiss Tax Rate").select("*").eq('Canton', 'SG').eq('Tax_Year', str(year_input)).execute()
 
 
 @st.cache
@@ -113,7 +113,7 @@ with st.form(key='liquidation_information'):
     notional_purchase = st.number_input(
         'Fiktiver Einkauf', step=1, key='notional_purchase')
     other_liquidation_profit = st.number_input(
-        'Übriger Liquidationsgewinn', step=1, key='other_liquidation_profit')
+        'Übriger Liquidationsgewinn', step=1, key='other_liquidation_profit')  # , format='%0.2f'
     submit_button = st.form_submit_button(
         label='Berechnen', on_click=validate_input)
 
@@ -147,7 +147,10 @@ if submit_button:
     federal_tax = federal_tax_notional_purchase + \
         federal_tax_other_liquidation_profit
 
-    col1, col2 = st.columns(2)
+    ahv = (notional_purchase + other_liquidation_profit)/0.9*0.1
+
+    col1, col2, col3 = st.columns(3)
     col1.metric(label='Kantons- und Gemeindesteuern',
                 value="CHF {:,.2f}".format(local_tax))
     col2.metric(label='Bundessteuern', value="CHF {:,.2f}".format(federal_tax))
+    col3.metric(label='AHV', value="CHF {:,.2f}".format(ahv))
